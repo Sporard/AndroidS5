@@ -1,0 +1,22 @@
+{
+  "liste":[
+    {
+      "name": "Test",
+      "mots": [
+        "DOMAC",
+        "kebab",
+        "kfc",
+        "sandwich",
+        "R-U"
+      ]
+    },
+    {
+      "name": "Test2",
+      "mots":[
+        "macdo",
+        "polytech",
+        "japonais"
+      ]
+    }
+  ]
+  }

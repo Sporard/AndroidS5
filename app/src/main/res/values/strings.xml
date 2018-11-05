@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">FULL_RNG</string>
+    <string name="button_rng">RNG</string>
+    <string name="button_add">+</string>
+    <string name="button_comeback">RETOUR</string>
+    <string name="button_gotoedit">EDIT</string>
+
+    <string name="input_addword">Nouveau</string>
+</resources>
