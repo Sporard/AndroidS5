@@ -39,22 +39,21 @@ public class AjoutActivity extends AppCompatActivity {
     private ListDico lesDicos;
     private EditText dicoName;
 
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_ajout);
-
-        dico = new Dico();
-        lesDicos = new ListDico(this);
-        try{
-            lesDicos.generateFromJson();
-        }catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void initView(){
         dicoName = findViewById(R.id.TitleDico);
         buttonComeBack =  findViewById(R.id.buttonComeBack);
         buttonAdd =  findViewById(R.id.buttonAdd);
         listView = findViewById(R.id.listView);
         inputAddWord =  findViewById(R.id.inputAddWord);
+    }
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_ajout);
+        dico = new Dico();
+        initView();
+        lesDicos = new ListDico(this);
+        lesDicos.read();
 
         //Récupération des extras
         Intent intent_main = getIntent();
@@ -68,22 +67,19 @@ public class AjoutActivity extends AppCompatActivity {
                 }else if(name.equals("+")){
                     dico.setName(name);
                     lesDicos.add(dico);
-
                 }
             }
 
         }
         dicoName.setText(dico.getName());
-        DataFile dfTest = new DataFile("dico.json",AjoutActivity.this);
        listView.setAdapter(new MyAdapter(this, dico.getWords()));
         //Renvoit des extras
         buttonComeBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Intent intent_back_main = new Intent(AjoutActivity.this, MainActivity.class) ;
-                intent_back_main.putExtra("liste",dico.getWords());
-                intent_back_main.putExtra("name",dico.getName());
+                //intent_back_main.putExtra("liste",dico.getWords());
+                //intent_back_main.putExtra("name",dico.getName());
                 startActivity(intent_back_main);
             }
 
@@ -96,21 +92,9 @@ public class AjoutActivity extends AppCompatActivity {
                 if( text != null ) {
                     dico.addWord(text);
                     lesDicos.searchDico(dico.getName()).setWords(dico.getWords());
-//                    try{
-//                        lesDicos.write();
-//                    }catch(IOException e){
-//                        e.printStackTrace();
-//                    }
+                    lesDicos.write();
                     Gson gson = new Gson();
-
-                    DataFile df = new DataFile("dico.json",AjoutActivity.this);
-                    String s;
-                    df.write(dico.toJSON());
-                    listView.setAdapter(new MyAdapter(AjoutActivity.this, dico.getWords()));
-                    //s = df.read();
-                    Context context = getApplicationContext();
-                    int duration = Toast.LENGTH_SHORT;
-                    Toast toast = Toast.makeText(context,dico.toJSON(),duration);
+                    Toast toast = Toast.makeText(AjoutActivity.this,gson.toJson(lesDicos.getListe().toArray()),Toast.LENGTH_SHORT);
                     toast.show();
                 }
                 else{
@@ -125,9 +109,11 @@ public class AjoutActivity extends AppCompatActivity {
                 Object o = listView.getItemAtPosition(position);
                 String choice =(String) o;
                 dico.removeWord(choice);
-
+                lesDicos.searchDico(dico.getName()).setWords(dico.getWords());
                 listView.setAdapter(new MyAdapter(AjoutActivity.this, dico.getWords()));
-                Toast toast = Toast.makeText(AjoutActivity.this,choice,Toast.LENGTH_SHORT);
+                lesDicos.write();
+                Gson gson = new Gson();
+                Toast toast = Toast.makeText(AjoutActivity.this,gson.toJson(lesDicos.getListe().toArray()),Toast.LENGTH_SHORT);
                 toast.show();
             }
         });
@@ -140,18 +126,18 @@ public class AjoutActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    dico.setName(dicoName.getText().toString());
-                    lesDicos.searchDico(dico.getName()).setName(dico.getName());
-                    dicoName.setHint(dico.getName());
-//                    try{
-//                        lesDicos.write();
-//                    }catch(IOException e){
-//                             e.printStackTrace();
-//                    }
+
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                dico.setName(dicoName.getText().toString());
+                lesDicos.searchDico(dico.getName()).setName(dico.getName());
+                dicoName.setHint(dico.getName());
+                lesDicos.write();
+                Gson gson = new Gson();
+                Toast toast = Toast.makeText(AjoutActivity.this,gson.toJson(lesDicos.getListe().toArray()),Toast.LENGTH_SHORT);
+                toast.show();
 
             }
         });

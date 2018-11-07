@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,14 +19,15 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ListDico {
-
+    public final static String LINK = "data.json";
     //attributs
     //La liste des dicos
     private ArrayList<Dico> liste ;
     //le liens du fichier de lecture
-    private String link ;
+
     //Le contexte acutel ou est l'instance de la classe
     private Context context;
 
@@ -33,7 +35,6 @@ public class ListDico {
 
     public ListDico(Context c ){
         setListe(new ArrayList<Dico>());
-        this.setLink("dico.json");
         this.setContext(c);
     }
 
@@ -73,7 +74,6 @@ public class ListDico {
 
     //Pour avoir le lien du fichier
 
-    public String getLink(){ return this.link;}
 
     //setteurs
 
@@ -82,9 +82,6 @@ public class ListDico {
         this.liste = liste ;
     }
 
-    public void setLink(String link){
-        this.link=link;
-    }
 
     public void setContext(Context c){
         this.context = c;
@@ -103,53 +100,54 @@ public class ListDico {
         this.searchDico(name).setWords(d.getWords());
     }
 
-    //Genere la liste des dictionnaire en lisant un fichier JSON
-    //Par choix personnel on a fixé le fichier que nous lisons pour générer la liste
-    public void generateFromJson() throws IOException {
-        String json;
-        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(this.getContext().getAssets().open(this.getLink())));
-        String line = "";
-        String result = "";
-        while((line = bufferedReader.readLine()) != null){
-            result += line;
-        }
+    public void read()  {
+        StringBuilder builder = new StringBuilder();
         try{
-            JSONObject jsonObject = new JSONObject(result);
-            JSONArray jsonArray = jsonObject.getJSONArray("liste");
-
-            Dico d = new Dico();
-            ArrayList<String> temp = new ArrayList<>();
-            for(int i = 0; i < jsonArray.length() ; i++ ){
-                d.setName(jsonArray.getJSONObject(i).getString("name"));
-                for(int k =0; k<jsonArray.getJSONObject(i).getJSONArray("mots").length(); k++){
-                    temp.add(jsonArray.getJSONObject(i).getJSONArray("mots").getString(k));
+            FileInputStream in  = this.getContext().openFileInput(LINK);
+            if(in != null){
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String temp;
+                while((temp = br.readLine()) != null ){
+                    builder.append(temp);
                 }
-                d.setWords(temp);
-                this.add(d);
-                temp = new ArrayList<>();
-                d = new Dico();
+                in.close();
+                Gson gson = new Gson();
+                ListDico tempTrue = gson.fromJson(builder.toString(),ListDico.class);
+                this.setListe(tempTrue.getListe());
+            }else{
+                Gson gson = new Gson();
+                ListDico temp = new ListDico(this.getContext());
+                Dico d = new Dico("Fruit");
+                temp.add(d);
+                write(gson.toJson(temp.getListe().toArray()));
             }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
-    }catch(JSONException e ) {
+    }
+
+    public void write() {
+        Gson gson = new Gson();
+        String s = gson.toJson(this.getListe().toArray());
+        try {
+            FileOutputStream io = this.getContext().openFileOutput(LINK, Context.MODE_PRIVATE);
+            OutputStreamWriter writer = new OutputStreamWriter(io);
+            writer.write(s);
+            writer.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-//    public void write() throws IOException {
-//        FileOutputStream fos = openFileOutpu
-//        bw.write(this.toJSON());
-//        bw.close();
-//    }
-
-    public String toJSON(){
-        String json ="{ \"liste\":[";
-        for(int i = 0 ; i < this.getListe().size();i++){
-            json  = json + this.getListe().get(i).toJSON();
+    private void write(String s){
+        try {
+            FileOutputStream io = this.getContext().openFileOutput(LINK, Context.MODE_PRIVATE);
+            OutputStreamWriter writer = new OutputStreamWriter(io);
+            writer.write(s);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        json = json + "]}";
-
-        return json;
     }
-
 
 }

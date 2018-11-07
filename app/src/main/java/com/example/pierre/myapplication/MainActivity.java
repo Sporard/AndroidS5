@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 
@@ -30,8 +31,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,30 +60,28 @@ public class MainActivity extends AppCompatActivity {
         startActivity(ajout_intent);
     }
 
+    public void initView(){
+        buttonRNG =  findViewById(R.id.buttonRNG);
+        editText =  findViewById(R.id.centralText);
+        buttonGoToEdit =  findViewById(R.id.buttonGoToEdit);
+        spinner = findViewById(R.id.Spinner);
+        bGoogle = findViewById(R.id.buttonWeb);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
+            initView();
             lesDicos = new ListDico(this);
-            buttonRNG =  findViewById(R.id.buttonRNG);
-            editText =  findViewById(R.id.centralText);
-            buttonGoToEdit =  findViewById(R.id.buttonGoToEdit);
-            spinner = findViewById(R.id.Spinner);
-
-            bGoogle = findViewById(R.id.buttonWeb);
-            Dico fais_la_rng = new Dico("main_dico");
-            Dico testtest = new Dico("lalaland");
-            DataFile df = new DataFile("dico.json",MainActivity.this);
+            lesDicos.read();
+            lesDicos.add(new Dico("+"));
+           lesDicos.add(new Dico("test"));
+            Gson gson = new Gson();
+            String json = gson.toJson(lesDicos.getListe().toArray());
+                    cl = (ConstraintLayout)findViewById(R.id.Mainlayout_id);
 
 
-           //Génération de l'objet ListDico en lisant le fichier
-           try{
-               lesDicos.generateFromJson();
-           }catch(IOException e){
-               e.printStackTrace();
-           }
-            cl = (ConstraintLayout)findViewById(R.id.Mainlayout_id);
-           lesDicos.add(new Dico("+"));
             ArrayAdapter adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,lesDicos.getDicoName());
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

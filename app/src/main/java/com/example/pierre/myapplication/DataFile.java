@@ -47,13 +47,21 @@ public class DataFile {
         }
     }
 
-    public String read() throws IOException {
-        String json;
-        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(this.getContext().getAssets().open("dico.json")));
-        String line = "";
-        String result = "";
-        while((line = bufferedReader.readLine()) != null)
-            result += line;
-        return result;
+    public String read()  {
+        StringBuilder builder = new StringBuilder();
+        try{
+            FileInputStream in  = this.getContext().openFileInput(this.getLink());
+            if(in != null){
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String temp;
+                while((temp = br.readLine()) != null ){
+                    builder.append(temp);
+                }
+                in.close();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return builder.toString();
     }
 }
