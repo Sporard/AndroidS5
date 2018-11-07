@@ -35,7 +35,7 @@ public class AjoutActivity extends AppCompatActivity {
     private FloatingActionButton buttonComeBack;
     private FloatingActionButton buttonAdd;
     private ListView listView;
-    private TextInputEditText inputAddWord;
+    private EditText inputAddWord;
     private ListDico lesDicos;
     private EditText dicoName;
 
@@ -68,10 +68,12 @@ public class AjoutActivity extends AppCompatActivity {
                 }else if(name.equals("+")){
                     dico.setName(name);
                     lesDicos.add(dico);
+
                 }
             }
 
         }
+        dicoName.setText(dico.getName());
         DataFile dfTest = new DataFile("dico.json",AjoutActivity.this);
        listView.setAdapter(new MyAdapter(this, dico.getWords()));
         //Renvoit des extras
@@ -140,6 +142,7 @@ public class AjoutActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                     dico.setName(dicoName.getText().toString());
                     lesDicos.searchDico(dico.getName()).setName(dico.getName());
+                    dicoName.setHint(dico.getName());
 //                    try{
 //                        lesDicos.write();
 //                    }catch(IOException e){

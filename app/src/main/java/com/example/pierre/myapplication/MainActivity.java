@@ -3,6 +3,8 @@ package com.example.pierre.myapplication;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -36,13 +38,15 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     //Atributs
-    private ImageButton buttonRNG;
+    private Button buttonRNG;
     private FloatingActionButton buttonGoToEdit;
     private TextView editText;
     private ListDico lesDicos;
     private ConstraintLayout cl;
     private Spinner spinner;
     private Button bGoogle;
+    private Boolean start = false ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -68,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
             cl = (ConstraintLayout)findViewById(R.id.Mainlayout_id);
            lesDicos.add(new Dico("+"));
             ArrayAdapter adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,lesDicos.getDicoName());
-            editText.setText(lesDicos.toJSON());
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
@@ -85,21 +88,6 @@ public class MainActivity extends AppCompatActivity {
             });
 
 
-            //Récupération des extras potentiel
-            Intent intent_main = getIntent();
-            if(intent_main != null){
-                Bundle extras = intent_main.getExtras();
-                if (extras != null){
-                    Dico d = new Dico();
-                    d.setName(extras.getString("name"));
-                    d.setWords(extras.getStringArrayList("liste"));
-                    //lesDicos.remplaceDico(d,d.getName());
-                    editText.setText(d.getName());
-                    Toast toast = Toast.makeText(MainActivity.this,extras.getString("name") + "\n " + lesDicos.getListe().toString(),Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-
-            }
             //Bouton qui lance la RNG
             buttonRNG.setOnClickListener(new View.OnClickListener() {
 
@@ -107,12 +95,34 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     String nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
-                    Dico d = lesDicos.searchDico(nameTemp);
+                   final  Dico d = lesDicos.searchDico(nameTemp);
+                    final Animation animation = AnimationUtils.loadAnimation(MainActivity.this,R.anim.bounce);
                     if (!(d.estVide()) ) {
-                            int random = (int) (Math.random() * d.getWords().size());
-                            editText.setText(d.getWords().get(random));
-                            Animation animation = AnimationUtils.loadAnimation(MainActivity.this,R.anim.lefttoright);
-                            editText.startAnimation(animation);
+                        buttonRNG.setText(getString(R.string.stop));
+                        int random = (int) (Math.random() * d.getWords().size());
+
+                            if(!start){
+                                start = true;
+
+                                //lance le thread de l'animation// n(new Runnable() {
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        while(start) {
+                                            int random = (int) (Math.random() * d.getWords().size());
+                                            editText.startAnimation(animation);
+                                            updateUI(d.getWords().get(random));
+
+                                        }
+                                    }
+                                });
+
+                            }else{
+                                //stop le thread
+                                buttonRNG.setText(getString(R.string.start));
+                                start = false ;
+                            }
+
 
                     }else{
                         Toast toast = Toast.makeText(MainActivity.this,"La liste est vide",Toast.LENGTH_SHORT);
@@ -134,5 +144,18 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
+    }
+
+    public void updateUI(String s) {
+        final String res = s ;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+        public void run() {
+            editText.setText(res);
+
+        }
+    });
     }
 }
