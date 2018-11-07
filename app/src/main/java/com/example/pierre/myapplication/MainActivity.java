@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -46,6 +47,14 @@ public class MainActivity extends AppCompatActivity {
     private Spinner spinner;
     private Button bGoogle;
     private Boolean start = false ;
+    private String nameTemp;
+
+    public void goToAjout_Activity(){
+        Intent ajout_intent = new Intent(MainActivity.this, AjoutActivity.class);
+        String nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
+        ajout_intent.putExtra("name",nameTemp);
+        startActivity(ajout_intent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,14 +84,26 @@ public class MainActivity extends AppCompatActivity {
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                              @Override
+                                              public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                                  nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
+                                                  if(nameTemp.equals("+")){
+                                                      goToAjout_Activity();
+                                                  }
+                                              }
+
+                                              @Override
+                                              public void onNothingSelected(AdapterView<?> parent) {
+
+                                              }
+                                          });
+
             //Envoie des extras a la vue 2
             buttonGoToEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent ajout_intent = new Intent(MainActivity.this, AjoutActivity.class);
-                    String nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
-                    ajout_intent.putExtra("name",nameTemp);
-                    startActivity(ajout_intent);
+                    goToAjout_Activity();
                 }
 
             });
@@ -90,52 +111,66 @@ public class MainActivity extends AppCompatActivity {
 
             //Bouton qui lance la RNG
             buttonRNG.setOnClickListener(new View.OnClickListener() {
-
-
                 @Override
                 public void onClick(View v) {
+
                     String nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
-                   final  Dico d = lesDicos.searchDico(nameTemp);
-                    final Animation animation = AnimationUtils.loadAnimation(MainActivity.this,R.anim.bounce);
-                    if (!(d.estVide()) ) {
-                        buttonRNG.setText(getString(R.string.stop));
-                        int random = (int) (Math.random() * d.getWords().size());
+                    final Dico d = lesDicos.searchDico(nameTemp);
+                    Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.blink_anim);
+                    if (!(d.estVide())) {
+                        if(!start){
+                            start = true;
+                            buttonRNG.setText(getString(R.string.stop));
+                            int random = (int) (Math.random() * d.getWords().size());
+                            editText.setText(d.getWords().get(random));
+                            editText.startAnimation(animation);
+                            animation.setAnimationListener(new Animation.AnimationListener() {
+                                @Override
+                                public void onAnimationStart(Animation animation) {
 
-                            if(!start){
-                                start = true;
+                                }
 
-                                //lance le thread de l'animation// n(new Runnable() {
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        while(start) {
-                                            int random = (int) (Math.random() * d.getWords().size());
-                                            editText.startAnimation(animation);
-                                            updateUI(d.getWords().get(random));
-
+                                @Override
+                                public void onAnimationEnd(Animation animation){
+                                        int random = (int) (Math.random() * d.getWords().size());
+                                        editText.startAnimation(animation);
+                                        editText.setText(d.getWords().get(random));
+                                        editText.startAnimation(animation);
+                                        try{
+                                            Thread.sleep(50);
+                                        }catch (InterruptedException e){
+                                            e.printStackTrace();
                                         }
-                                    }
-                                });
+                                }
 
-                            }else{
-                                //stop le thread
-                                buttonRNG.setText(getString(R.string.start));
-                                start = false ;
-                            }
+                                @Override
+                                public void onAnimationRepeat(Animation animation){
+                                }
+                            });
+                        }else{
+                            Toast test = Toast.makeText(MainActivity.this, "la", Toast.LENGTH_SHORT);
+                            test.show();
+                            editText.animate().cancel();
+                            buttonRNG.setText(R.string.start);
+                            start = false;
+                        }
 
 
-                    }else{
-                        Toast toast = Toast.makeText(MainActivity.this,"La liste est vide",Toast.LENGTH_SHORT);
+
+                    } else {
+
+                        Toast toast = Toast.makeText(MainActivity.this, "La liste est vide", Toast.LENGTH_SHORT);
                         toast.show();
                     }
                 }
+
             });
 
             //Listeners du bouton de recherche sur le web
             bGoogle.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String search = "http://www.google.fr/search?q="+ (String) editText.getText();
+                    String search = "http://www.google.fr/search?q=" + (String) editText.getText();
                     Intent web = new Intent(Intent.ACTION_VIEW);
                     web.setData(Uri.parse(search));
                     startActivity(web);
@@ -147,15 +182,5 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void updateUI(String s) {
-        final String res = s ;
 
-                runOnUiThread(new Runnable() {
-                    @Override
-        public void run() {
-            editText.setText(res);
-
-        }
-    });
-    }
 }
