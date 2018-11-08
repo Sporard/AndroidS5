@@ -117,7 +117,16 @@ public class ListDico {
             fis = this.getContext().openFileInput(fichier);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-
+        }
+        if (fis == null){
+            this.add(new Dico("default"));
+            Gson gson = new Gson();
+            this.sauvegarde(gson.toJson(this.getListe().toArray()),ListDico.LINK);
+            try {
+                fis = this.getContext().openFileInput(fichier);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
         builder = lireFileInpuStream(fis);
         try{

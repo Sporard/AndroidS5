@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
                 lesDicos.add(new Dico("default"));
                 Gson gson = new Gson();
                 lesDicos.sauvegarde(gson.toJson(lesDicos.getListe().toArray()),ListDico.LINK);
-
             }
 
             //Menu spinner car les menus hamburger ne sont pas supporté par Android 4.0
