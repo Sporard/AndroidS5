@@ -26,6 +26,7 @@ import android.widget.Toolbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,26 +38,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     //Atributs
     private Button buttonRNG;
-    private FloatingActionButton buttonGoToEdit;
+    private ImageButton buttonGoToEdit;
     private TextView editText;
     private ListDico lesDicos;
-    private ConstraintLayout cl;
-    private Spinner spinner;
-    private Button bGoogle;
-    private Boolean start = false ;
-    private String nameTemp;
 
-    public void goToAjout_Activity(){
+    private Spinner spinner;
+    private ImageButton bGoogle;
+    private Boolean start = false ;
+    private ImageButton addDico;
+
+    public void goToAjout_Activity(String name){
         Intent ajout_intent = new Intent(MainActivity.this, AjoutActivity.class);
-        String nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
-        ajout_intent.putExtra("name",nameTemp);
+        ajout_intent.putExtra("name",name);
         startActivity(ajout_intent);
     }
 
@@ -66,49 +68,54 @@ public class MainActivity extends AppCompatActivity {
         buttonGoToEdit =  findViewById(R.id.buttonGoToEdit);
         spinner = findViewById(R.id.Spinner);
         bGoogle = findViewById(R.id.buttonWeb);
+        addDico =findViewById(R.id.addDico);
+    }
+
+    public void newDico(){
+        Dico d = new Dico("Nouveau");
+        lesDicos.add(d);
+        Gson gson = new Gson();
+        lesDicos.sauvegarde(gson.toJson(lesDicos.getListe().toArray()),ListDico.LINK);
+        goToAjout_Activity(d.getName());
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
+            //Initialise les objets de l'activité
             initView();
+            //On genere la liste de dico
             lesDicos = new ListDico(this);
-            lesDicos.read();
-            lesDicos.add(new Dico("+"));
-           lesDicos.add(new Dico("test"));
-            Gson gson = new Gson();
-            String json = gson.toJson(lesDicos.getListe().toArray());
-                    cl = (ConstraintLayout)findViewById(R.id.Mainlayout_id);
+            lesDicos.read(ListDico.LINK);
+            boolean bool = lesDicos.getListe().size() == 0;
+            if(lesDicos.getListe().size() == 0 ){
+                lesDicos.add(new Dico("default"));
+                Gson gson = new Gson();
+                lesDicos.sauvegarde(gson.toJson(lesDicos.getListe().toArray()),ListDico.LINK);
 
+            }
 
+            //Menu spinner car les menus hamburger ne sont pas supporté par Android 4.0
             ArrayAdapter adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,lesDicos.getDicoName());
-
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                              @Override
-                                              public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                                  nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
-                                                  if(nameTemp.equals("+")){
-                                                      goToAjout_Activity();
-                                                  }
-                                              }
 
-                                              @Override
-                                              public void onNothingSelected(AdapterView<?> parent) {
+        //Passage a l'ajout d'un nouveau dictionnaire
+        addDico.setOnClickListener(new View.OnClickListener() {
+                                       @Override
+                                       public void onClick(View v) {
+                                           newDico();
+                                       }
+                                   });
 
-                                              }
-                                          });
-
-            //Envoie des extras a la vue 2
-            buttonGoToEdit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    goToAjout_Activity();
+        //Passage a l'édition du dictionnaire choisit
+        buttonGoToEdit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    goToAjout_Activity((String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition()));
                 }
-
-            });
+                });
 
 
             //Bouton qui lance la RNG
@@ -118,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
 
                     String nameTemp = (String) spinner.getAdapter().getItem(spinner.getSelectedItemPosition());
                     final Dico d = lesDicos.searchDico(nameTemp);
-                    Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.blink_anim);
+                    Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.sample_anim);
                     if (!(d.estVide())) {
                         if(!start){
                             start = true;
@@ -134,15 +141,17 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAnimationEnd(Animation animation){
+                                    if(start) {
                                         int random = (int) (Math.random() * d.getWords().size());
                                         editText.startAnimation(animation);
                                         editText.setText(d.getWords().get(random));
                                         editText.startAnimation(animation);
-                                        try{
-                                            Thread.sleep(50);
-                                        }catch (InterruptedException e){
+                                        try {
+                                            Thread.sleep(10);
+                                        } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
+                                    }
                                 }
 
                                 @Override
@@ -150,9 +159,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
                         }else{
-                            Toast test = Toast.makeText(MainActivity.this, "la", Toast.LENGTH_SHORT);
-                            test.show();
-                            editText.animate().cancel();
+
                             buttonRNG.setText(R.string.start);
                             start = false;
                         }

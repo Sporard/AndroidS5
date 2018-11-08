@@ -1,8 +1,10 @@
 package com.example.pierre.myapplication;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,8 +14,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -95,59 +99,78 @@ public class ListDico {
         this.liste.add(d);
     }
 
+    public void del(Dico d){
+        this.liste.remove(d);
+    }
+
     //Remplace les mots d'un dictionnaire dans la liste
     public void remplaceDico(Dico d, String name ){
         this.searchDico(name).setWords(d.getWords());
     }
 
-    public void read()  {
-        StringBuilder builder = new StringBuilder();
+    public void read(String fichier) {
+        File file = null;
+
+        StringBuilder builder = null;
+        FileInputStream fis = null;
+        try {
+            fis = this.getContext().openFileInput(fichier);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+
+        }
+        builder = lireFileInpuStream(fis);
         try{
-            FileInputStream in  = this.getContext().openFileInput(LINK);
-            if(in != null){
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                String temp;
-                while((temp = br.readLine()) != null ){
-                    builder.append(temp);
-                }
-                in.close();
-                Gson gson = new Gson();
-                ListDico tempTrue = gson.fromJson(builder.toString(),ListDico.class);
-                this.setListe(tempTrue.getListe());
-            }else{
-                Gson gson = new Gson();
-                ListDico temp = new ListDico(this.getContext());
-                Dico d = new Dico("Fruit");
-                temp.add(d);
-                write(gson.toJson(temp.getListe().toArray()));
-            }
-        }catch (Exception e){
+            fis.close();
+        }catch (IOException e ){
             e.printStackTrace();
         }
-
-    }
-
-    public void write() {
         Gson gson = new Gson();
-        String s = gson.toJson(this.getListe().toArray());
-        try {
-            FileOutputStream io = this.getContext().openFileOutput(LINK, Context.MODE_PRIVATE);
-            OutputStreamWriter writer = new OutputStreamWriter(io);
-            writer.write(s);
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        TypeToken<ArrayList<Dico>> token = new TypeToken<ArrayList<Dico>>(){};
+        ArrayList<Dico> temp = gson.fromJson(builder.toString(),token.getType());
+        this.setListe(temp);
     }
-    private void write(String s){
-        try {
-            FileOutputStream io = this.getContext().openFileOutput(LINK, Context.MODE_PRIVATE);
-            OutputStreamWriter writer = new OutputStreamWriter(io);
-            writer.write(s);
-            writer.close();
-        } catch (Exception e) {
+
+    private StringBuilder lireFileInpuStream(FileInputStream fis) {
+        StringBuilder sb = null ;
+        InputStreamReader rstream = null;
+        try{
+            rstream = new InputStreamReader(fis);
+            BufferedReader br = new BufferedReader(rstream);
+            sb = new StringBuilder();
+            String temp;
+            while((temp = br.readLine()) != null){
+                sb.append(temp);
+            }
+        }catch (IOException e){
             e.printStackTrace();
+            return null;
         }
+        return sb;
     }
+
+
+
+
+    public boolean sauvegarde(String text,String fichier) {
+        FileOutputStream fos = null;
+        try{
+            fos = this.getContext().openFileOutput(fichier,Context.MODE_PRIVATE);
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+            return false;
+        }
+        try{
+            OutputStreamWriter ostream = new OutputStreamWriter(fos);
+            ostream.write(text);
+            ostream.close();
+        }catch (IOException e ){
+            e.printStackTrace();
+            return false ;
+        }
+        return true;
+    }
+
+
 
 }

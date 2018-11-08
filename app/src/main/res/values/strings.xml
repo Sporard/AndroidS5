@@ -6,6 +6,7 @@
     <string name="button_gotoedit">EDIT</string>
     <string name="start">C\'est parti ! </string>
     <string name="stop">Stop!</string>
+    <string name="welcome">Bienvenue ! Allez tente ta chance !</string>
     <string name="searchFr">http://www.google.fr/search?q=</string>
     <string name="searchWorld">http://www.google.com/search?q=</string>
 
