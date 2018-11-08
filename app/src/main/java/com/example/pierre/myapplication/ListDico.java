@@ -108,6 +108,7 @@ public class ListDico {
         this.searchDico(name).setWords(d.getWords());
     }
 
+    //Lis le fichier et parse le Json en ListDico
     public void read(String fichier) {
         File file = null;
 
@@ -119,7 +120,10 @@ public class ListDico {
             e.printStackTrace();
         }
         if (fis == null){
-            this.add(new Dico("default"));
+            //Si le fichier n'est pas existant alors on créer un nouveau fichier avec un dico a l'intérieur
+            Dico d = new Dico();
+            d.dice();
+            this.add(d);
             Gson gson = new Gson();
             this.sauvegarde(gson.toJson(this.getListe().toArray()),ListDico.LINK);
             try {
@@ -134,12 +138,14 @@ public class ListDico {
         }catch (IOException e ){
             e.printStackTrace();
         }
+        //Deserialisation de l'objet json
         Gson gson = new Gson();
         TypeToken<ArrayList<Dico>> token = new TypeToken<ArrayList<Dico>>(){};
         ArrayList<Dico> temp = gson.fromJson(builder.toString(),token.getType());
         this.setListe(temp);
     }
 
+    //Methode qui genère la chaine de caractère du fichier
     private StringBuilder lireFileInpuStream(FileInputStream fis) {
         StringBuilder sb = null ;
         InputStreamReader rstream = null;
@@ -160,7 +166,7 @@ public class ListDico {
 
 
 
-
+    //Ecrit dans un fichier
     public boolean sauvegarde(String text,String fichier) {
         FileOutputStream fos = null;
         try{

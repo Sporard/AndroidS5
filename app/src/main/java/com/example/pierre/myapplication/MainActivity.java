@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton buttonGoToEdit;
     private TextView editText;
     private ListDico lesDicos;
-
+    private int random;
     private Spinner spinner;
     private ImageButton bGoogle;
     private Boolean start = false ;
@@ -90,7 +90,9 @@ public class MainActivity extends AppCompatActivity {
             lesDicos.read(ListDico.LINK);
             boolean bool = lesDicos.getListe().size() == 0;
             if(lesDicos.getListe().size() == 0 ){
-                lesDicos.add(new Dico("default"));
+                Dico d = new Dico();
+                d.dice();
+                lesDicos.add(d);
                 Gson gson = new Gson();
                 lesDicos.sauvegarde(gson.toJson(lesDicos.getListe().toArray()),ListDico.LINK);
             }
@@ -129,51 +131,54 @@ public class MainActivity extends AppCompatActivity {
                         if(!start){
                             start = true;
                             buttonRNG.setText(getString(R.string.stop));
-                            int random = (int) (Math.random() * d.getWords().size());
-                            editText.setText(d.getWords().get(random));
                             editText.startAnimation(animation);
+                            //Listener sur l'animation pour la faire boucler
                             animation.setAnimationListener(new Animation.AnimationListener() {
                                 @Override
                                 public void onAnimationStart(Animation animation) {
+                                    editText.setText(d.getWords().get(random));
 
                                 }
 
                                 @Override
                                 public void onAnimationEnd(Animation animation){
                                     if(start) {
-                                        int random = (int) (Math.random() * d.getWords().size());
+                                        random = (int) (Math.random() * d.getWords().size());
                                         editText.startAnimation(animation);
-                                        editText.setText(d.getWords().get(random));
-                                        editText.startAnimation(animation);
-                                        try {
-                                            Thread.sleep(10);
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
 
+                                    }else{
+                                        //On ralenti l'animation quand on veut la stopper
+                                        random = (int) (Math.random() * d.getWords().size());
+                                        for(int i = (int)animation.getDuration(); i < 10000 ; i+=100 ){
+                                            editText.startAnimation(animation);
+                                        }
+                                        //Pour eviter toutes triches on genère un nouveau mouvement aléatoire
+                                        random = (int) (Math.random() * d.getWords().size());
+                                        editText.setText(d.getWords().get(random));
+                                        editText.startAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.anim.lefttoright));
+
+
+                                   }
+                                }
                                 @Override
                                 public void onAnimationRepeat(Animation animation){
+
                                 }
                             });
                         }else{
-
+                            //Arret de la boucle de l'animation
                             buttonRNG.setText(R.string.start);
                             start = false;
                         }
 
-
-
                     } else {
-
+                        //On lance pas d'animation sur une liste vide !
                         Toast toast = Toast.makeText(MainActivity.this, "La liste est vide", Toast.LENGTH_SHORT);
                         toast.show();
                     }
                 }
 
             });
-
             //Listeners du bouton de recherche sur le web
             bGoogle.setOnClickListener(new View.OnClickListener() {
                 @Override

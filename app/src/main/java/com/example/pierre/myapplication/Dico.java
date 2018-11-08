@@ -75,5 +75,12 @@ public class Dico {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
+    //Generation d'un dico basique : dés
+    public void dice(){
+        this.setName("Lanceur de dé");
+        for(int i = 1; i <= 6; i++){
+            this.addWord(Integer.toString(i));
+        }
+    }
 
 }
